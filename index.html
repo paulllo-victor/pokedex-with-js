@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokedex</title>
+</head>
+<body>
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            background-color:  darkcyan;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .container{
+            width: 80%;
+            background-color:white;
+            text-align: center;
+        }
+        .container-pokemons{
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+        .pokemon{
+            margin:2%;
+            width: 29%;
+            background-color: #eee;
+            border-radius: 10px;
+        }
+        .inputs{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .inputs input{
+            padding: 10px;
+            margin: 1%;
+        }
+        .inputs input[type="search"]{
+            width: 80%;
+        }
+        .inputs input[type="number"]{
+            width: 20%;
+        }
+        .spin{
+            width: 60px;
+            height: 60px;
+            border: 5px solid #eee;
+            border-bottom: 5px solid darkcyan;
+            margin: 40px auto;
+           border-radius: 50%;
+           animation: move 4s infinite linear;
+        }
+        @keyframes move{
+            from{
+                -webkit-transform:rotate(0deg);
+            }
+            to{
+                -webkit-transform:rotate(360deg);
+            }
+        }
+    </style>
+    <div class="container">
+        <img src="https://raw.githubusercontent.com/PokeAPI/media/master/logo/pokeapi_256.png" alt="">
+        <div class="inputs">
+            <input placeholder="Informe o nome do pokemon" type="search" id="name">
+            <input placeholder="Informe a quantidade de pokemons" type="number" id="qtd">
+        </div>
+        <div id="container-pokemons" class="container-pokemons">
+            <div class="spin"></div>
+        </div>
+    </div>    
+
+    <script>
+        var containerPokemons = document.getElementById("container-pokemons");
+
+        var searchName = document.getElementById('name')
+        var searchQtd = document.getElementById('qtd')
+
+        searchQtd.addEventListener('keyup',(e)=>{
+            containerPokemons.innerHTML = '<div class="spin"></div>';
+            searchName.value = '';
+            if(e.target.value == ''){
+                list()
+            }
+            list(e.target.value)
+        })
+
+        list();
+
+        function list(qtd = 10) {
+            fetch('https://pokeapi.co/api/v2/pokemon?limit='+qtd)
+            .then(response => response.json())
+            .then(allPokemons => {
+                var pokemonsList = [];
+
+                allPokemons.results.forEach(info => {
+                    fetch(info.url)
+                    .then(response => response.json())
+                    .then(pokemon => {
+
+                        console.log(pokemon);
+
+                        pokemonsList.push({
+                            name : pokemon.name,
+                            img : pokemon.sprites.front_default,
+                        });
+
+                        if(pokemonsList.length == qtd){
+                            let imgs = '';
+                            containerPokemons.innerHTML = '';
+                            pokemonsList.forEach(pk =>{
+                                containerPokemons.innerHTML += `
+                                <div class="pokemon">
+                                    <img src="${pk.img}" alt="">
+                                <h2>${pk.name}</h2>
+                                </div>
+                                `    
+                            });
+                        }
+
+                                        
+                    })
+                })
+
+            })
+        }
+
+        searchName.addEventListener('keyup',(e)=>{
+            containerPokemons.innerHTML = '<div class="spin"></div>';
+            searchQtd.value = '';
+            if(e.target.value == ''){
+                list()
+            }
+            single(e.target.value)
+        })
+
+        function single(name) {
+
+            var pokemonsList = [];
+            var exist = false;
+
+            fetch('https://pokeapi.co/api/v2/pokemon/'+name)
+            .then(response => response.json())
+            .then(pokemon => {
+                
+                if(pokemon.name != undefined){
+                    pokemonsList.push({
+                        name : pokemon.name,
+                        img : pokemon.sprites.front_default,
+                    }); 
+
+                    containerPokemons.innerHTML = '';
+                    pokemonsList.forEach(pk =>{
+                        containerPokemons.innerHTML += `
+                        <div class="pokemon">
+                            <img src="${pk.img}" alt="">
+                        <h2>${pk.name}</h2>
+                        </div>
+                        `    
+                    });
+                }else{
+                    containerPokemons.innerHTML = ''
+                    containerPokemons.innerHTML += `
+                        <div class="pokemon" style="margin: 10px auto">
+                            <h2>Pokemon não encontrado</h2>
+                        </div>
+                        `
+                }
+
+            }).catch(()=>{
+                containerPokemons.innerHTML = ''
+                containerPokemons.innerHTML += `
+                    <div class="pokemon" style="margin: 10px auto">
+                        <h2>Pokemon não encontrado</h2>
+                    </div>
+                    `
+            });
+        }
+
+    </script>
+</body>
+</html>
